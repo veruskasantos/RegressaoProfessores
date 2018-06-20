@@ -107,7 +107,7 @@ avaliacoes %>%
          title = "Gráfico 4.1.1: Relação do score com a beleza média")
 ```
 
-Parece que não existe uma relação linear forte entre as duas variáveis analisadas, pois não vemos nenhum padrão. Vamos criar um modelo para verificar:
+Parece que não existe uma relação linear forte entre as duas variáveis analisadas, pois não vemos nenhum padrão. Mas vamos criar um modelo para verificar:
 
 ```{r}
 set.seed(1)
@@ -117,28 +117,28 @@ tidy(modelo_score_beleza, conf.int = TRUE, conf.level = 0.95)
 glance(modelo_score_beleza)
 ```
 
-Regressão linear simples foi utilizada para analisar se a **beleza dos professores** tem uma associação significativa com a **avaliação dos professores** (feita por discentes). Os resultados da regressão indicam que um modelo com 1 preditor no formato $score = 3.88 + 0.07 * beleza$ explica apenas 3,5% da variância da variável de resposta (R2 = 0.0350). $beleza$, medida como a média da avaliação da beleza do professor para cada disciplina, com valores entre [1.667, 8.167], tem uma relação não significativa com o erro b = [0,03; 0,97], IC com 95%. O aumento de 1 unidade de $beleza$ produz uma mudança de 0.07 na avaliação dos professores ($score$).
+Regressão linear simples foi utilizada para analisar se a **beleza dos professores** tem uma associação significativa e relevante com a **avaliação dos professores** (feita por discentes). Os resultados da regressão indicam que um modelo com 1 preditor no formato $score = 3.88 + 0.07 * beleza$ explica apenas 3,5% da variância da variável de resposta (R2 = 0.0350). $beleza$, medida como a média da avaliação da beleza do professor para cada disciplina, com valores entre [1.667, 8.167], tem uma relação significativa com o erro b = [0,03; 0,1], IC com 95%. O aumento de 1 unidade de $beleza$ produz uma mudança de 0.07 na avaliação dos professores ($score$), o que não se mostra tão relevante.
 
 Estes resultados nos induzem a rejeitar a hipótese de que a beleza do professor influencia na percepção de competência dos alunos.
 
 #### 4.2. Modelo de regressão linear multivariado
 
-Como não encontramos relação significativa entre beleza e score, através do modelo anterior, definiremos outras variáveis que podem influenciar na definição de beleza e consequentemente na percepção de competência dos alunos, por exemplo, a idade dos professores, o tipo da roupa do professor na foto avaliada e a cor da foto avaliada. 
+Como não encontramos relação relevante entre beleza e score, através do modelo anterior, definiremos outras variáveis que podem influenciar na definição de beleza e consequentemente na percepção de competência dos alunos, por exemplo, a idade dos professores, o tipo da roupa do professor na foto avaliada e a cor da foto avaliada. 
 
 Supõe-se que, quanto mais jovem seja um professor, mais atraente ele será, aumentando, possivelmente, a sua avaliação. É possível que a foto informal e a foto colorida também influenciem positivamente na avaliação, então, vamos verificar:
 
 ```{r}
 set.seed(1)
-modelo_score_beleza2 = lm(score ~ age + pic_outfit + pic_color, data = avaliacoes)
+modelo_score_beleza2 = lm(score ~ bty_avg + age + pic_outfit + pic_color, data = avaliacoes)
 
 tidy(modelo_score_beleza2, conf.int = TRUE, conf.level = 0.95)
 glance(modelo_score_beleza2)
 ```
 
-Assim como a média da avaliação de beleza, as variáveis $idade$, $tipoDaFoto$ e $corDaFoto$ não explicam significativamente a variância da avaliação dos professores. O modelo de regressão linear multivariada, gerado com estas 3 últimas variáveis, no formato $avaliacao = 4.72 - 0.006*idade - 0.06*tipoDaFoto - 0.22*corDaFoto$ explica apenas 3,73% da variância da variável de resposta (R2 = 0.0372), 0,2% a mais que o modelo anterior. $idade$, medida como a idade de cada professor, com valores entre [29, 73], tem uma relação não significativa com o erro b = [-0,01; -0,001], IC com 95%; $tipoDaFoto$, medida como a roupa do professor na foto avaliada, com os valores formal (0) e informal (1), tem uma relação não significativa com o erro b = [-0,19; 0,08], IC com 95% e, por fim, $corDaFoto$, medida como a cor da foto avaliada do professor, com os valores colorida (1) e preta&branco (0), tem uma relação não significativa com o erro b = [-0,35; -0,09], IC com 95%. O aumento de 1 unidade de $idade$ produz uma mudança de -0.006 na avaliação dos professores ($score$), enquanto $tipoDaFoto$ e $corDaFoto$ alteram -0.06 e -0.22, respectivamente.
+Assim como a média da avaliação de beleza, as variáveis $idade$, $tipoDaFoto$ e $corDaFoto$ não apresentam relevância na variância da avaliação dos professores. O modelo de regressão linear multivariada, gerado com estas 4 variáveis, no formato $avaliacao = 4.33 + 0.05*beleza - 0.004*idade - 0.03*tipoDaFoto - 0.17*corDaFoto$ explica apenas 5,09% da variância da variável de resposta (R2 = 0.0509), 2% a mais que o modelo anterior, aproximadamente. $beleza$, medida como a média da avaliação da beleza do professor para cada disciplina, com valores entre [1.667, 8.167], tem uma relação significativa com o erro b = [0,01; 0,08]; $idade$, medida como a idade de cada professor, com valores entre [29, 73], tem uma relação *não significativa* com o erro b = [-0,01; 0,001]; $tipoDaFoto$, medida como a roupa do professor na foto avaliada, com os valores formal (0) e informal (1), tem uma relação *não significativa* com o erro b = [-0,17; 0,1], e, por fim, $corDaFoto$, medida como a cor da foto avaliada do professor, com os valores colorida (1) e preta&branco (0), tem uma relação significativa com o erro b = [-0,3; -0,03], todos os IC com 95%. O aumento de 1 unidade de $beleza$ produz um aumento de 0.05 na avaliação dos professores ($score$), enquanto que $idade$, $tipoDaFoto$ e $corDaFoto$ alteram -0.004, -0.03 e -0.17, respectivamente.
 
-Assim, todas as hipóteses sobre as variáveis deste modelo também foram rejeitadas, porque elas apresentam uma relação negativa, apesar de ser fraca, com a variável de resposta.
+Assim, todas as hipóteses sobre as variáveis deste modelo também foram rejeitadas, porque elas apresentam fraca relevância, apesar de duas delas (beleza média e cor da foto) ter significância, com a variável de resposta.
 
 ## 5. Conclusões
 
-A partir dos modelos de regressão criados, percebemos que a beleza não influencia significativamente na pontuação da avaliação dos professores, feita pelos docentes.
+A partir dos modelos de regressão criados, percebemos que a beleza não apresenta relação relevante na pontuação da avaliação dos professores, feita pelos discentes.
