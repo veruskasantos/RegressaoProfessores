@@ -1,0 +1,130 @@
+---
+title: "regressao-professores-prob5-parte2"
+output: html_document
+---
+
+## 1. Objetivo
+
+O objetivo deste relatório é analisar dados de avaliações de discentes sobre os docentes da Universidade do Texas, em Austin, e validar a hipótese de que a beleza do professor influencia na percepção de competência dos alunos.
+
+Para isto, criaremos modelos de regressão para verificar a relação entre algumas variáveis, descritas mais abaixo.
+
+## 2. Configurações
+
+```{r warning=FALSE, message=FALSE}
+library(tidyverse)
+library(broom)
+library(here)
+library(lubridate)
+source(here::here("code/lib.R"))
+theme_set(theme_report())
+
+knitr::opts_chunk$set(tidy = FALSE,
+                      fig.width = 6,
+                      fig.height = 5)
+```
+
+#cada linha contém diferentes disciplinas e cada coluna representa as variáveis sobre as disciplinas e os professores.
+
+```{r warning=FALSE, message=FALSE}
+avaliacoes = read_csv(here::here("data/evals.csv"))
+```
+
+
+## 3. Dados
+
+* **score:** representa a pontuação média da avaliação do docente. Os valores variam entre 1 (muito insatisfatório) e 5 (excelente) e a distribuição dos dados é relativamente crescente, ou seja, há muitas avaliações com score próximo do valor máximo.
+
+```{r warning=FALSE, message=FALSE}
+avaliacoes %>% 
+    ggplot(aes(x = score)) + 
+    geom_histogram(bins = 20, fill = "cyan3", color = "cyan3")
+
+```
+
+* **bty_avg:** representa a média da avaliação da beleza do professor. Os valores variam entre 1.667 e 8.167, onde 1 representa nível de beleza baixo e 10 o nível de beleza mais alto. A distribuição dos dados é relativamente similar em torno dos valores possíveis, apresentando uma leve concentração no valor mediano do intervalo.
+
+```{r warning=FALSE, message=FALSE}
+avaliacoes %>% 
+    ggplot(aes(x = bty_avg)) + 
+    geom_histogram(bins = 20, fill = "cyan3", color = "cyan3")
+
+```
+
+* **age:** representa a idade do professor e seus valors variam entre 29 e 73, como mostado no gráfico logo abaixo.
+
+```{r warning=FALSE, message=FALSE}
+avaliacoes %>% 
+    ggplot(aes(x = age)) + 
+    geom_histogram(bins = 20, fill = "cyan3", color = "cyan3")
+
+```
+
+* **pic_outfit:** representa o tipo da roupa que o professor usava na foto avaliada, sendo os possíveis valores informal ou formal, sendo não formais a maioria das roupas que os professores usavam, como exibido no gráfico abaico.
+
+```{r warning=FALSE, message=FALSE}
+avaliacoes %>%  
+    group_by(pic_outfit) %>% 
+    summarise(n = n()) %>% 
+    ggplot(aes(x = pic_outfit, y = n)) + 
+    geom_col(fill = "cyan3", color = "cyan3")
+
+```
+
+* **pic_color:** representa a cor da foto avaliada do professor, sendo os possíveis valores colorida ou preto&branco. A distribuição dos valores é similar ao gráfico anterior, apresentando mais professores com fotos coloridas.
+
+```{r warning=FALSE, message=FALSE}
+avaliacoes %>%  
+    group_by(pic_color) %>% 
+    summarise(n = n()) %>% 
+    ggplot(aes(x = pic_color, y = n)) + 
+    geom_col(fill = "cyan3", color = "cyan3")
+
+```
+
+## 4. Análise dos dados
+
+### 4.1. Modelo de regressão linear simples
+
+A princípio, verificaremos a relação entre beleza e score. Para isso, vejamos abaixo a distribuição desses dados.
+
+```{r warning=FALSE, message=FALSE}
+avaliacoes %>% 
+  ggplot(aes(x = score, y = bty_avg)) + 
+  geom_point()
+```
+
+Parece que não existe uma relação linear forte entre as duas variáveis analisadas, pois não vemos nenhum padrão. Vamos criar um modelo para verificar:
+
+```{r}
+modelo_score_beleza = lm(score ~ bty_avg, data = avaliacoes)
+
+tidy(modelo_score_beleza, conf.int = TRUE, conf.level = 0.95)
+glance(modelo_score_beleza)
+```
+
+Regressão linear simples foi utilizada para analisar se a **beleza dos professores** tem uma associação significativa com a **avaliação dos professores** (feita por discentes). Os resultados da regressão indicam que um modelo com 1 preditor no formato $score = 3.88 + 0.07 * beleza$ explica apenas 3,5% da variância da variável de resposta (R2 = 0.0350). $beleza$, medida como a média da avaliação da beleza do professor para cada disciplina, com valores entre [1.667, 8.167], tem uma relação não significativa com o erro b = [0,03; 0,97], IC com 95%. O aumento de 1 unidade de $beleza$ produz uma mudança de 0.07 na avaliação dos professores ($score$).
+
+Estes resultados nos induzem a rejeitar a hipótese de que a beleza do professor influencia na percepção de competência dos alunos.
+
+#### 4.2. Modelo de regressão linear múltipla
+
+Como não encontramos relação significativa entre beleza e score, através do modelo anterior, definiremos outras variáveis que podem influenciar na definição de beleza e consequentemente na percepção de competência dos alunos, por exemplo, a idade dos professores, o tipo da roupa do professor na foto avaliada e a cor da foto avaliada. 
+
+Supõe-se que quanto mais jovem, mais atraente um professor seja, aumentando, possivelmente, a sua avaliação. É possível que a foto informal e a foto colorida também influenciem positivamente na avaliação, então, vamos verificar:
+
+```{r}
+modelo_score_beleza2 = lm(score ~ age + pic_outfit + pic_color, data = avaliacoes)
+
+tidy(modelo_score_beleza2, conf.int = TRUE, conf.level = 0.95)
+glance(modelo_score_beleza2)
+```
+
+Assim como a média da avaliação de beleza, as variáveis $idade$, $tipoDaFoto$ e $corDaFoto$ não explicam significativamente a variância da avaliação dos professores. O modelo de regressão linear multivariada, gerado com estas 3 últimas variáveis, no formato $avaliacao = 4.72 - 0.006*idade - 0.06*tipoDaFoto - 0.22*corDaFoto$ explica apenas 4,73% da variância da variável de resposta (R2 = 0.0372). $idade$, medida como a idade de cada professor, com valores entre [29, 73], tem uma relação não significativa com o erro b = [0,01; -0,01], IC com 95%; $tipoDaFoto$, medida como a roupa do professor na foto avaliada, com os valores formal (1) e informal (0), tem uma relação não significativa com o erro b = [0,04; -0,19], IC com 95% e, por fim, $corDaFoto$, medida como a cor da foto avaliada do professor, com os valores colorida (1) e preta&branco (0), tem uma relação não significativa com o erro b = [0,001; -0,35], IC com 95%. O aumento de 1 unidade de $idade$ produz uma mudança de -0.006 na avaliação dos professores ($score$), enquanto $tipoDaFoto$ e $corDaFoto$ alteram -0.06 e -0.22, respectivamente.
+
+Assim, todas as hipóteses sobre as variáveis deste modelo também foram rejeitadas, porque elas apresentam uma relação negativa, apesar de ser fraca, com a variável de resposta.
+
+## 5. Conclusões
+
+A partir dos modelos de regressão criados, percebemos que a beleza não influencia significativamente na pontuação da avaliação dos professores, feita pelos docentes.
+
